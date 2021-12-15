@@ -1,8 +1,11 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using UnityEngine;
+using static CSVWriter;
 
-public class GameMasteR : MonoBehaviour
+public partial class GameMasteR : MonoBehaviour
 {
     public static GameMasteR gm;
 
@@ -17,6 +20,9 @@ public class GameMasteR : MonoBehaviour
     [SerializeField]
     int startingMoney;
     public static int Money;
+    public static int Score;
+    public static int Killed;
+    public static int HighScore;
 
     void Awake()
     {
@@ -80,6 +86,14 @@ public class GameMasteR : MonoBehaviour
     void ToggleUpgradeMenu()
     {
         upgradeMenu.SetActive(!upgradeMenu.activeSelf);
+        if (upgradeMenu.activeSelf)
+        {
+            Time.timeScale = 0;
+        }
+        else
+        {
+            Time.timeScale = 1;
+        }
         waveSpawneR.enabled = !upgradeMenu.activeSelf;
         onToggleUpgradeMenu.Invoke(upgradeMenu.activeSelf);
     }
@@ -90,6 +104,11 @@ public class GameMasteR : MonoBehaviour
 
         Debug.Log("GAME OVER");
         gameOverUI.SetActive(true);
+
+        PlayerInfo playerInfo = new PlayerInfo(PlayerPrefs.GetString("Nickname"), Money, Score, Killed);
+        WriteCSV(playerInfo);
+        Debug.Log(playerInfo);
+        //WriteInfo.Write(playerInfo);
     }
 
     public IEnumerator _RespawnPlayer()
@@ -100,7 +119,7 @@ public class GameMasteR : MonoBehaviour
         audioManager.PlaySound(spawnSoundName);
         Instantiate(playerPrefab, spawnPoint.position, spawnPoint.rotation);
         Transform clone = Instantiate(spawnPrefab, spawnPoint.position, spawnPoint.rotation) as Transform;
-        Destroy(clone.gameObject, 3f);
+        Destroy(clone.gameObject, 0f); // 3f
     }
 
     public static void KillPlayer(PlayeR player)
@@ -110,6 +129,8 @@ public class GameMasteR : MonoBehaviour
         if (_remainingLives <= 0)
         {
             gm.EndGame();
+            Killed = 0;
+            Score = 0;
         }
         else
             gm.StartCoroutine(gm._RespawnPlayer());
@@ -127,6 +148,9 @@ public class GameMasteR : MonoBehaviour
 
         // Gain some money
         Money += _enemy.moneyDrop;
+        Score += 10;
+        Killed += 1;
+        HighScore += 10;
         audioManager.PlaySound("Money");
 
         // Add particles
@@ -137,4 +161,5 @@ public class GameMasteR : MonoBehaviour
         cameraShake.Shake(_enemy.shakeAmt, _enemy.shakeLength);
         Destroy(_enemy.gameObject);
     }
+
 }

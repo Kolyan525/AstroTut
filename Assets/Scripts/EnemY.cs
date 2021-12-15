@@ -63,6 +63,7 @@ public class EnemY : MonoBehaviour
         GetComponent<EnemyAI>().enabled = !active;
     }
 
+    // TODO: Here you can calculate hit count
     public void DamageEnemy(int damage)
     {
         stats.currentHealth -= damage;
